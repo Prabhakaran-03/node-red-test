@@ -16,6 +16,161 @@
         "env": []
     },
     {
+        "id": "5322ffecf9ba5f48",
+        "type": "tab",
+        "label": "Flow 3",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "bd4437d9.e96308",
+        "type": "subflow",
+        "name": "Folder Classifier",
+        "info": "\n# Inputs\nIf a msg.path or a msg.folderStructure or msg.destination is sent, the msg will be used.\notherwise the node options will be used\n## path\nmsg.path or the origin folder option assigns the directory to read the files\n## destination\nmsg.destination or the destination folder option assigns the directory to write\n## folderStructure\nmsg.folderStructure or his option creates an structure on the destination to move the files\n\n## How it works\nIt reads the files in a folder ( not recursively )\nthen it check if the folders you describe on the JSON ( folderStructure) exists on the destination folder\nthen it creates a folder if needed\n\nfinally, which files correspond to each folder are checked by means of the extensions  and moved\n\n\n# (i) This node needs FS \n(is assigned on the Funcion inside, first line, you can change it)\n",
+        "category": "",
+        "in": [
+            {
+                "x": 40,
+                "y": 120,
+                "wires": [
+                    {
+                        "id": "1978c645.4bd9fa"
+                    }
+                ]
+            }
+        ],
+        "out": [
+            {
+                "x": 220,
+                "y": 180,
+                "wires": [
+                    {
+                        "id": "2add29ea.adfa26",
+                        "port": 0
+                    }
+                ]
+            },
+            {
+                "x": 220,
+                "y": 180,
+                "wires": [
+                    {
+                        "id": "2add29ea.adfa26",
+                        "port": 0
+                    }
+                ]
+            },
+            {
+                "x": 220,
+                "y": 180,
+                "wires": [
+                    {
+                        "id": "2add29ea.adfa26",
+                        "port": 0
+                    }
+                ]
+            },
+            {
+                "x": 220,
+                "y": 180,
+                "wires": [
+                    {
+                        "id": "2add29ea.adfa26",
+                        "port": 0
+                    }
+                ]
+            }
+        ],
+        "env": [
+            {
+                "name": "setOriginFolder",
+                "type": "str",
+                "value": "D:\\\\Test Reorder Folder",
+                "ui": {
+                    "label": {
+                        "en-US": "Origin path"
+                    }
+                }
+            },
+            {
+                "name": "setDestinationFolder",
+                "type": "str",
+                "value": "D:\\\\Test Reorder Folder",
+                "ui": {
+                    "label": {
+                        "en-US": "Destination path"
+                    }
+                }
+            },
+            {
+                "name": "setFolderStructure",
+                "type": "json",
+                "value": "[{\"folderName\":\"Documents\",\"extensionsAvailable\":[\"txt\",\"doc\",\"docx\",\"xml\",\"pdf\",\"epub\",\"azw\",\"ibook\"]},{\"folderName\":\"Audio\",\"extensionsAvailable\":[\"mp3\",\"wav\",\"wma\",\"MIDI\"]},{\"folderName\":\"Video\",\"extensionsAvailable\":[\"AVI\",\"BIK\",\"DIV\",\"DIVX\",\"DVD\",\"IVF\",\"mpeg\",\"MOV\",\"MOVIE\",\"MP2V\",\"MP4\",\"MPA\",\"MPE\",\"MPEG\",\"MPG\",\"MPV2\",\"QT\",\"QTL\",\"RPM\",\"SMK\",\"WM\",\"WMV\",\"WOB\"]},{\"folderName\":\"Zips\",\"extensionsAvailable\":[\"zip\",\"rar\",\"tar\"]},{\"folderName\":\"Images\",\"extensionsAvailable\":[\"jpg\",\"jpeg\",\"bmp\",\"png\"]},{\"folderName\":\"Executables\",\"extensionsAvailable\":[\"exe\",\"bat\",\"dll\",\"sys\"]},{\"folderName\":\"Images Animated\",\"extensionsAvailable\":[\"gif\"]},{\"folderName\":\"Virtual Machines\",\"extensionsAvailable\":[\"iso\",\"mds\",\"img\"]},{\"folderName\":\"Others\"}]",
+                "ui": {
+                    "label": {
+                        "en-US": "Folder Structure"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "json",
+                            "env"
+                        ]
+                    }
+                }
+            }
+        ],
+        "color": "#DDAA99",
+        "icon": "node-red/sort.svg",
+        "status": {
+            "x": 220,
+            "y": 180,
+            "wires": [
+                {
+                    "id": "2add29ea.adfa26",
+                    "port": 0
+                }
+            ]
+        }
+    },
+    {
+        "id": "1978c645.4bd9fa",
+        "type": "function",
+        "z": "bd4437d9.e96308",
+        "name": "",
+        "func": "var path = (msg.path) ? msg.path : (env.get(\"setOriginFolder\"));\nvar destination = (msg.destination) ? msg.destination : (env.get(\"setDestinationFolder\"));\n\nconst fs = global.get('fs');\nvar customDirStructure = (msg.folderStructure && typeof msg.folderStructure === \"array\") ? msg.folderStructure : env.get(\"setFolderStructure\");\n\nfunction checkDirectory(parentDir, dirList) {\n    dirList.forEach(item => {\n        if (!fs.existsSync(`${parentDir}/${item.folderName}`)) {\n            fs.mkdirSync(`${parentDir}/${item.folderName}`);\n        }\n    })\n\n}\ncheckDirectory(destination, customDirStructure);\n(function reorderDirectory(__dirname) {\n    fs.readdir(__dirname, (err, files) => {\n        if (err) {\n            node.error(err);\n        }\n        else {\n            files.forEach(file => {\n                var stats = fs.stat(`${__dirname}/${file}`, (err, fileWithStats) => {\n                    if (err) {\n                        node.error(err);\n                    }\n                    else {\n                        if (fileWithStats.isFile()) {\n                            //recursive\n                            fileWithStats.path = `${__dirname}/${file}`\n                            fileWithStats.filename = file\n                            fileWithStats.extension = file.replace(/.*\\./, '').toLowerCase();\n\n                            moveTo(fileWithStats, destination, customDirStructure)\n                        }\n                    }\n                })\n            })\n        }\n    })\n    node.status({ text: \"Ended\", fill: \"green\" })\n\n})(path)\n\n//functions\nfunction moveTo(item, destination, customDirStructure) {\n    try {\n        // node.warn({item:item,destination:destination,customDirStructure:customDirStructure})\n        for (var i = 0; i < customDirStructure.length; i++) {\n            var path = `${destination}/${customDirStructure[i].folderName}/${item.filename}`;\n            if (customDirStructure[i].extensionsAvailable) {\n                var extensions = customDirStructure[i].extensionsAvailable;\n                var valid = extensions.sort().join(\", \");\n                //  node.warn({indexOf:extensions.indexOf(item.extension)})\n                if (extensions.indexOf(item.extension) > 0) {\n                    // node.warn({[path]:item})\n                    move(item.path, path, function (err) {\n                        if (err) {\n                            node.status({ text: \"error\", fill: \"red\" });\n                            node.error(err)\n                        }\n                    })\n                }\n\n            } else {\n                move(item.path, path, function (err) {\n                    if (err) {\n                        node.status({ text: \"error\", fill: \"red\" });\n                        node.error(err)\n                    }\n                })\n            }\n        }\n    } catch (err) { node.error(err) }\n}\nfunction move(oldPath, newPath, callback) {\n\n    fs.rename(oldPath, newPath, function (err) {\n        if (err) {\n            if (err.code === 'EXDEV') {\n                copy();\n            } else {\n                callback(err);\n            }\n            return;\n        }\n        callback();\n    });\n\n    function copy() {\n        var readStream = fs.createReadStream(oldPath);\n        var writeStream = fs.createWriteStream(newPath);\n\n        readStream.on('error', callback);\n        writeStream.on('error', callback);\n\n        readStream.on('close', function () {\n            fs.unlink(oldPath, callback);\n        });\n\n        readStream.pipe(writeStream);\n    }\n}",
+        "outputs": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "x": 220,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "2add29ea.adfa26",
+        "type": "status",
+        "z": "bd4437d9.e96308",
+        "name": "",
+        "scope": null,
+        "x": 80,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "18124f15.e1c7f1",
+        "type": "comment",
+        "z": "bd4437d9.e96308",
+        "name": "link: list of extensions by type",
+        "info": "[https://www.geeknetic.es/Guia/91/Los-archivos-tipos-extensiones-y-programas-para-su-uso.html#:~:text=Los%20tipos%20de%20archivo%20m%C3%A1s,%2C%20mpeg%2C%20mwv%2C%20etc.]()",
+        "x": 140,
+        "y": 20,
+        "wires": []
+    },
+    {
         "id": "5a35ab31ad772cb1",
         "type": "inject",
         "z": "8480330a9d7daeb6",
@@ -59,6 +214,33 @@
         "wires": []
     },
     {
+        "id": "a80b9e420f7f7bcb",
+        "type": "inject",
+        "z": "8480330a9d7daeb6",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 380,
+        "y": 280,
+        "wires": [
+            []
+        ]
+    },
+    {
         "id": "8df7bfe496f607d0",
         "type": "debug",
         "z": "601a993887dbb260",
@@ -99,6 +281,76 @@
         "y": 120,
         "wires": [
             []
+        ]
+    },
+    {
+        "id": "5f1e5450.c37fcc",
+        "type": "subflow:bd4437d9.e96308",
+        "z": "5322ffecf9ba5f48",
+        "name": "",
+        "env": [
+            {
+                "name": "setOriginFolder",
+                "value": "C:\\Users\\My User\\Downloads",
+                "type": "str"
+            },
+            {
+                "name": "setDestinationFolder",
+                "value": "D:\\Multimedia",
+                "type": "str"
+            },
+            {
+                "name": "setFolderStructure",
+                "value": "[{\"folderName\":\"01-Documents\",\"extensionsAvailable\":[\"txt\",\"doc\",\"docx\",\"xml\",\"pdf\",\"epub\",\"azw\",\"ibook\"]},{\"folderName\":\"02-Music\",\"extensionsAvailable\":[\"mp3\",\"wav\",\"wma\",\"MIDI\"]},{\"folderName\":\"03-Videos\",\"extensionsAvailable\":[\"AVI\",\"BIK\",\"DIV\",\"DIVX\",\"DVD\",\"IVF\",\"mpeg\",\"MOV\",\"MOVIE\",\"MP2V\",\"MP4\",\"MPA\",\"MPE\",\"MPEG\",\"MPG\",\"MPV2\",\"QT\",\"QTL\",\"RPM\",\"SMK\",\"WM\",\"WMV\",\"WOB\"]},{\"folderName\":\"06-Zips\",\"extensionsAvailable\":[\"zip\",\"rar\",\"tar\"]},{\"folderName\":\"04-Images\",\"extensionsAvailable\":[\"jpg\",\"jpeg\",\"bmp\",\"png\"]},{\"folderName\":\"07-Executables\",\"extensionsAvailable\":[\"exe\",\"bat\",\"dll\",\"sys\",\"msi\"]},{\"folderName\":\"05-Images Animated\",\"extensionsAvailable\":[\"gif\"]},{\"folderName\":\"08-Virtual Machines\",\"extensionsAvailable\":[\"iso\",\"mds\",\"img\"]}]",
+                "type": "json"
+            },
+            {
+                "name": "setOrigin",
+                "value": "C:\\Users\\Anxo\\Downloads",
+                "type": "str"
+            },
+            {
+                "name": "setDestination",
+                "value": "D:\\Multimedia",
+                "type": "str"
+            }
+        ],
+        "x": 700,
+        "y": 180,
+        "wires": [
+            [],
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "4b49fdd2.86cc94",
+        "type": "inject",
+        "z": "5322ffecf9ba5f48",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "1500",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 500,
+        "y": 180,
+        "wires": [
+            [
+                "5f1e5450.c37fcc"
+            ]
         ]
     }
 ]

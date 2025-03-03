@@ -291,12 +291,12 @@
         "env": [
             {
                 "name": "setOriginFolder",
-                "value": "C:\\Users\\My User\\Downloads",
+                "value": "C:\\Users\\EFOSR",
                 "type": "str"
             },
             {
                 "name": "setDestinationFolder",
-                "value": "D:\\Multimedia",
+                "value": "C:\\Users\\EFOSR\\Node-RED",
                 "type": "str"
             },
             {

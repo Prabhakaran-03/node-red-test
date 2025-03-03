@@ -291,12 +291,12 @@
         "env": [
             {
                 "name": "setOriginFolder",
-                "value": "C:\\Users\\EFOSR",
+                "value": "https://github.com/Prabhakaran-03/node-red-test",
                 "type": "str"
             },
             {
                 "name": "setDestinationFolder",
-                "value": "C:\\Users\\EFOSR\\Node-RED",
+                "value": "https://github.com/Prabhakaran-03/node-red-test",
                 "type": "str"
             },
             {
